@@ -89,7 +89,7 @@ setup_xavier_dtbs()
 	cp ${DTSI_FOLDER}/${SOURCE_GPIO} ${PINMUX_EXE_XAVIER}/.
 	cp ${DTSI_FOLDER}/${SOURCE_PADV} ${PINMUX_EXE_XAVIER}/.
 	cd ${PINMUX_EXE_XAVIER}
-	echo "Running pimnux from ${SOURCE_PINMUX} and ${SOURCE_GPIO}"
+	echo -n "Running pimnux from ${SOURCE_PINMUX} and ${SOURCE_GPIO}... "
 
 	python pinmux-dts2cfg.py \
 		--pinmux                                        \
@@ -98,9 +98,11 @@ setup_xavier_dtbs()
 		${SOURCE_GPIO}                                  \
 		1.0                                             \
 	> ${JETPACK}/bootloader/t186ref/BCT/tegra19x-mb1-pinmux-p3668-a01.cfg
+	echo "Done"
 
-	echo "Running padvoltage from ${SOURCE_PADV}"
+	echo -n "Running padvoltage from ${SOURCE_PADV}... "
 	python pinmux-dts2cfg.py --pad pad_info.txt ${SOURCE_PADV}  1.0 > ${JETPACK}/bootloader/t186ref/BCT/tegra19x-mb1-padvoltage-p3668-a01.cfg
+	echo "Done"
 	cd ${HERE}
 }
 
@@ -110,17 +112,16 @@ build()
 	cd ${KERNEL_SOURCES}
 	#STEPS="tegra_defconfig zImage modules dtbs modules_install"
 	for i in ${STEPS}; do
-		echo "Running $i"
-		echo $TEGRA_KERNEL_OUT
-		echo $JETPACK_ROOTFS
+		echo -n "Running $i... "
 		if [ "$i" == "modules_install" ]; then
-			sudo make -C kernel/kernel-4.9/ ARCH=arm64 O=$TEGRA_KERNEL_OUT LOCALVERSION=-tegra INSTALL_MOD_PATH=$JETPACK_ROOTFS CROSS_COMPILE=${TOOLCHAIN_PREFIX} -j${PROCESSORS} --output-sync=target $i > ${LOGDIR}/log.$i 2>&1
+			sudo make -C kernel/kernel-5.10/ ARCH=arm64 O=$TEGRA_KERNEL_OUT LOCALVERSION=-tegra INSTALL_MOD_PATH=$JETPACK_ROOTFS CROSS_COMPILE=${TOOLCHAIN_PREFIX} -j${PROCESSORS} --output-sync=target $i > ${LOGDIR}/log.$i 2>&1
 		else
-			make -C kernel/kernel-4.9/ ARCH=arm64 O=$TEGRA_KERNEL_OUT LOCALVERSION=-tegra CROSS_COMPILE=${TOOLCHAIN_PREFIX} -j${PROCESSORS} --output-sync=target $i > ${LOGDIR}/log.$i 2>&1
+			make -C kernel/kernel-5.10/ ARCH=arm64 O=$TEGRA_KERNEL_OUT LOCALVERSION=-tegra CROSS_COMPILE=${TOOLCHAIN_PREFIX} -j${PROCESSORS} --output-sync=target $i > ${LOGDIR}/log.$i 2>&1
 		fi
 		if [ ! "$?" == 0 ]; then
 			exit_error $i
 		fi
+		echo "Done"
 	done
 	cd ${HERE}
 }
@@ -143,7 +144,7 @@ while getopts ":b::o:" opts; do
                         OPTIONS="1"
                         case "${OPTARG}" in
                                 kernel)
-                                        STEPS="tegra_defconfig zImage"
+                                        STEPS="tegra_defconfig Image"
                                         ;;
                                 modules)
                                         STEPS="tegra_defconfig modules modules_install"
@@ -152,7 +153,7 @@ while getopts ":b::o:" opts; do
                                         STEPS="tegra_defconfig dtbs"
                                         ;;
                                 all)
-                                        STEPS="tegra_defconfig zImage modules dtbs modules_install"
+                                        STEPS="tegra_defconfig Image modules dtbs modules_install"
                                         ;;
                                 cleanup)
                                         STEPS="distclean mrproper"
@@ -193,8 +194,7 @@ fi
 
 echo "Running on ${BOARD}"
 check_for_sources
-exit
 set_environment_vars
 build
-copy_results
+#copy_results
 

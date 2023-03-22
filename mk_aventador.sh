@@ -10,11 +10,6 @@ set_commonvars()
 	. ./aventador_common.config
 }
 
-set_nanovars()
-{
-	. ./aventador-nano.config
-}
-
 set_xaviervars()
 {
 	. ./aventador-xavier.config
@@ -29,7 +24,7 @@ exit_error()
 
 usage()
 {
-        echo "Usage: $0 -o [<kernel> <modules> <dtbs> <all> <cleanup>] -b [<nano> <xavier>]" 1>&2;
+        echo "Usage: $0 -o [<kernel> <modules> <dtbs> <all> <cleanup>] -b [<xavier> <orin>]" 1>&2;
         exit 1;
 }
 
@@ -67,16 +62,6 @@ set_environment_vars()
 	echo "SOURCE_GPIO=${SOURCE_GPIO}"  >> ${BOARD}.env
 	echo "SOURCE_PADV=${SOURCE_PADV}"  >> ${BOARD}.env
 	. ./${BOARD}.env
-}
-
-setup_nano_dtbs()
-{
-	cd ${HERE}
-	if [ ! -d nano_dtb ]; then
-		mkdir nano_dtb
-	fi
-	cp ${DTSI_FOLDER}/${SOURCE_PINMUX} ${HERE}/${SH_SOURCES}/hardware/nvidia/platform/t210/porg/kernel-dts/porg-platforms/tegra210-aventador-0000-pinmux-p3448-0002-b00.dtsi
-	cp ${DTSI_FOLDER}/${SOURCE_GPIO} ${HERE}/${SH_SOURCES}/hardware/nvidia/platform/t210/porg/kernel-dts/porg-platforms/tegra210-aventador-0000-gpio-p3448-0002-b00.dtsi
 }
 
 setup_xavier_dtbs()
@@ -167,13 +152,13 @@ while getopts ":b::o:" opts; do
 		b)
 			BOARD=${OPTARG}
 			case "${BOARD}" in
-				nano)
-					set_commonvars
-					set_nanovars
-					;;
 				xavier)
 					set_commonvars
 					set_xaviervars
+					;;
+				orin)
+					echo "ORIN Not yet implemented"
+					exit 0
 					;;
 				*)
 					usage
